@@ -2,22 +2,51 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 
+const mongoose = require("mongoose")
+
+mongoose.connect("mongodb://127.0.0.1:27017/abcxyz").then(()=>{
+  console.log("connected to DB !!!");  
+}).catch((err)=>{
+  console.error(err)
+})
+
+const studentSchema = new mongoose.Schema({
+  name:{
+    type: String,
+    required: true
+  },
+  age: Number,
+  course :{
+    type: String,
+    required: true
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
+})
+
 const users = require("./MOCK_DATA.json");
+const { type } = require("os");
 
 const app = express();
 app.use(cors());
 
 // middlewares
 app.use(express.urlencoded({ extended: true }));
+
 app.use(express.json());
 
-// app.get("/users", (req, res) => {
-//   res.json(users);
-// });
+app.use((req, res, next)=>{
+    console.log("middleware 1 called");
+    req.rishabh = "sharma"
+    next()
+})
 
 app
   .route("/users")
   .get((req, res) => {
+    console.log("hello from kid 2", req.rishabh)
     res.json(users);
   })
   .post((req, res) => {
@@ -62,6 +91,10 @@ app
     
     res.json({ status: "success" });
   });
+
+// app.get("/users", (req, res) => {
+//   res.json(users);
+// });
 
 // app.get("/users/:id", (req, res) => {
 //   const id = req.params.id;
