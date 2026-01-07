@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
+// const data = require("./MOCK_DATA.json")
 
 const mongoose = require("mongoose")
 
@@ -11,23 +11,31 @@ mongoose.connect("mongodb://127.0.0.1:27017/abcxyz").then(()=>{
 })
 
 const studentSchema = new mongoose.Schema({
-  name:{
+  first_name:{
     type: String,
     required: true
   },
-  age: Number,
-  course :{
+  last_name:{
     type: String,
     required: true
   },
+  gender: String,
   isActive: {
     type: Boolean,
     default: true
   }
 })
 
-const users = require("./MOCK_DATA.json");
-const { type } = require("os");
+const Student = new mongoose.model("Student", studentSchema)
+
+// async function insertBulkDataForTheFirstTime(){
+//   await Student.insertMany(data)
+//   console.log("Data inserted Successfully!!")
+// }
+
+// insertBulkDataForTheFirstTime()
+
+// const users = require("./MOCK_DATA.json");
 
 const app = express();
 app.use(cors());
@@ -37,17 +45,21 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.json());
 
-app.use((req, res, next)=>{
-    console.log("middleware 1 called");
-    req.rishabh = "sharma"
-    next()
-})
+// app.use((req, res, next)=>{
+//     console.log("middleware 1 called");
+//     req.rishabh = "sharma"
+//     next()
+// })
 
 app
   .route("/users")
-  .get((req, res) => {
-    console.log("hello from kid 2", req.rishabh)
-    res.json(users);
+  .get(async (req, res) => {
+    const users = await Student.find()
+    
+    
+    res.json(users.filter((ele)=>{
+      return ele.isActive === true
+    }));
   })
   .post((req, res) => {
     const body = req.body
@@ -60,9 +72,12 @@ app
 
 app
   .route("/users/:id")
-  .get((req, res) => {
+  .get(async (req, res) => {
     const id = req.params.id;
-    const user = users.find((user) => user.id == id);
+
+    console.log("USER BY ID => ", req.params.id);
+    const user = await Student.findById(id);
+    
     res.json(user);
   })
   .patch((req, res) => {
@@ -78,18 +93,28 @@ app
     console.log("updated user =>", user);
     res.json({ status: "success" });
   })
-  .delete((req, res) => {
+  .delete(async (req, res) => {
     const id = req.params.id;
-    const index = users.findIndex((user) => user.id == id);
+   console.log("del id => ", id);
+   
+    const user = await Student.findByIdAndUpdate(
+      id,
+      {isActive : false},
+      {new: true}
+    )
 
-    if (index === -1) {
-      return res.json({ status: "failed to find user" });
+    if(!user){
+      console.log("failed to find user !!!!");
+      
+      return res.status(404).json({
+        message:"failed to find user !!!!"
+      })
     }
 
-    const dletedUser = users.splice(index, 1)
-    console.log("all users = ", users);
+
     
-    res.json({ status: "success" });
+    res.status(200).json({ status: "success" });
+    console.log("Success deleted");
   });
 
 // app.get("/users", (req, res) => {

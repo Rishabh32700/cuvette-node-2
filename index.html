@@ -12,7 +12,25 @@
     <script>
       const container = document.getElementById("container");
       console.log(container);
+      container.addEventListener("click", (e)=>{
+        if(e.target.tagName === "BUTTON"){
+          const id = e.target.dataset.id
+          console.log(id);
+          DeleteUserById(id)
+        }
+      })
 
+      function DeleteUserById (id){
+        fetch(`http://localhost:8000/users/${id}`, {
+          method:"DELETE"
+        }).then((res)=>{
+          res.json()
+        }).then((res)=>{
+          console.log("USER DELETED !!!");
+          window.reload()
+        })
+
+      }
       const users = fetch("http://localhost:8000/users")
         .then((res) => {
           return res.json();
@@ -21,10 +39,11 @@
           console.log(res);
           res.map((ele, idx) => {
             const div = document.createElement("div");
-            div.innerHTML = `<p>${ele.first_name}</p>`;
+            div.innerHTML = `<p>${ele.first_name}</p> <button data-id=${ele._id}>DELETE</button>`;
             container.appendChild(div);
           });
         });
+        
     </script>
   </body>
 </html>
